@@ -3,7 +3,10 @@ import {View, Text,StyleSheet,Image,TextInput,TouchableOpacity} from 'react-nati
 
 import logo from '../assets/logo.png';
 
-export default function Login(){
+export default function Login( {navigation}){
+  function handleLogin(){
+    navigation.navigate('Main');
+  }
     return (
     <View style ={styles.container}>
       <Image source={logo} />
@@ -14,7 +17,7 @@ export default function Login(){
       placeholderTextColor="#999"
       style={styles.input}
       />
-      <TouchableOpacity style={styles.button}>
+      <TouchableOpacity onPress={handleLogin} style={styles.button}>
           <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
     </View>
