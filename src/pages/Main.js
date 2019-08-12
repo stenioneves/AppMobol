@@ -1,32 +1,68 @@
-import React from 'react';
+import React, {useContext, useState, useEffect} from 'react';
 import {View,Image, SafeAreaView,StyleSheet,Text,TouchableOpacity} from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
+
+import api from '../services/api';
 
 import logo from '../assets/logo.png';
 import dislike from '../assets/dislike.png';
 import like from '../assets/like.png';
 
-export default function Main(){
+export default function Main({ navigation}){
+    const id =navigation.getParam('user');
+    const [users,setUsers]=useState([]);
+  
+    
+    useEffect(()=>{
+        async function loadUsers(){
+            const response= await api.get('/devs',{
+                headers:{
+                    user:id,
+                }
+            })
+            setUsers(response.data);
+
+        }
+        loadUsers();
+    },[id]);
+    async function handleLike(id){
+        await api.post(`/devs/${id}/likes`,null,{
+            headers:{user: id},
+        })
+        setUsers(users.filter(user=>user._id!==id));
+    }
+    async function handleDislike(id){
+        await api.post(`/devs/${id}/dislikes`,null,{
+            headers:{user:id},
+        })
+        setUsers(users.filter(user=>user._id!==id));
+    }
+    async function handleLogout(){
+        await AsyncStorage.clear();
+        navigation.navigate('Login');
+    }
+
+
     return (
         <SafeAreaView style={styles.container}>
+            <TouchableOpacity onPress={handleLogout}>
             <Image source={logo} style={styles.logo} />
+            </TouchableOpacity>
             <View style={styles.cardsContainer}>
-                <View style={[styles.card,{zIndex:2}]}>
-                    <Image  style={styles.avatar}  source={{uri:'https://avatars2.githubusercontent.com/u/19194400?v=4'}}/>
-                    <View style={styles.footer}>
-                        <Text style={styles.name}>Stenio Neves</Text>
-                        <Text style={styles.bio} numberOfLines={3}> Progrmador Jr</Text>
+                {users.length ===0
+                ? <Text style={styles.empty}>Acabou: :(</Text>:
+                (
+                    users.map((user,index)=>(
+                        <View key={user._id} style={[styles.card,{zIndex:users.length - index}]}>
+                        <Image  style={styles.avatar}  source={{uri:user.avatar}}/>
+                        <View style={styles.footer}>
+                            <Text style={styles.name}>{user.name}</Text>
+                            <Text style={styles.bio} numberOfLines={3}>{user.bio}</Text>
+                        </View>
                     </View>
-                </View>
-                <View style={[styles.card,{zIndex:1}]}>
-                    <Image  style={styles.avatar}  source={{uri:'https://avatars2.githubusercontent.com/u/19194400?v=4'}}/>
-                    <View style={styles.footer}>
-                        <Text style={styles.name}>Stenio Neves</Text>
-                        <Text style={styles.bio} numberOfLines={3}> Progrmador Jr</Text>
-                    </View>
-                </View>
-
-
-
+                    ))
+                )
+                }            
 
             </View >           
             <View style={styles.buttonsContainer}>
@@ -122,11 +158,14 @@ const styles = StyleSheet.create({
       shadowOffset:{
           width:0,
           height: 2,
-      },
+      }, 
+    },
+    empty:{
+        alignSelf: 'center',
+        fontSize: 24,
+        color: '#999',
+        fontWeight: 'bold'
 
-
-
-  }
-
+    }
 
 });
